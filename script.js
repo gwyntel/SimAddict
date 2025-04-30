@@ -45,7 +45,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Action Section Elements
     const actionSection = document.getElementById('action-section');
     const saveWebsiteBtn = document.getElementById('save-website-btn');
-    const startOverBtn = document.getElementById('start-over-btn');
+    // const startOverBtn = document.getElementById('start-over-btn'); // Old button removed
+    const globalStartOverBtn = document.getElementById('global-start-over-btn'); // New global button
     
     // Fullscreen Preview Elements
     const fullscreenPreview = document.getElementById('fullscreen-preview');
@@ -111,26 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    /**
-     * Resets the application to the initial state
-     */
-    function resetApplication() {
-        if (confirm('Are you sure you want to start over? This will clear your current progress.')) {
-            // Clear outline and website content
-            outlineDisplayDiv.innerHTML = '<p><i>Outline will be generated here...</i></p>';
-            outlineEditTextarea.value = '';
-            outlineEditTextarea.style.display = 'none';
-            websiteIframe.srcdoc = '';
-            
-            // Reset buttons
-            editOutlineBtn.disabled = true;
-            approveOutlineBtn.disabled = true;
-            saveWebsiteBtn.disabled = true;
-            
-            // Go back to prompt step
-            showStep(STEPS.PROMPT);
-        }
-    }
+    // Removed old resetApplication function as we now use page reload
     
     /**
      * Shows the fullscreen preview
@@ -1145,7 +1127,15 @@ IMPORTANT: Keep in mind that the generated website will need to be compatible wi
     
     saveFullscreenBtn.addEventListener('click', saveFullscreenWebsite);
     
-    startOverBtn.addEventListener('click', resetApplication);
+    // Add listener for the new global start over button
+    globalStartOverBtn.addEventListener('click', () => {
+        if (confirm('Are you sure you want to start over? This will reload the page and clear all current progress.')) {
+            // Clear step state before reloading
+            localStorage.removeItem(CURRENT_STEP_KEY);
+            localStorage.removeItem(GENERATION_STATE_KEY); // Clear any pending generation state
+            window.location.reload();
+        }
+    });
 
     // File Upload Handling
     fileUploadInput.addEventListener('change', handleFileUpload);

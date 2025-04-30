@@ -22,6 +22,7 @@
     -   **Markdown Integration:** Added Marked.js via CDN to render the outline with better formatting.
     -   **Streaming Outline Generation:** Modified `handleGenerateOutline` to handle SSE responses and update the Markdown-rendered outline display progressively.
     -   **Full-Frame Preview & Overlay:** Added HTML/CSS/JS to transition the iframe to a full-frame view with overlay buttons (Save, Back).
+    -   **Global Start Over Button:** Added an always-visible "Start Over" button (fixed position) that reloads the page to reset the application state.
 
 ## Next Steps (Future Enhancements)
 
@@ -39,4 +40,5 @@
 -   **Markdown:** Used Marked.js via CDN for simplicity and reliability.
 -   **UI Flow:** Used CSS (`display: none/block`) controlled by JS to manage the visibility of sections, with state saved in localStorage.
 -   **Full-Frame Preview:** Implemented using fixed positioning for the iframe container with overlay controls.
+-   **Global Reset:** Implemented using a fixed-position button that triggers `window.location.reload()` after clearing relevant localStorage keys.
 -   Maintained vanilla JS/CSS/HTML approach for simplicity and performance.
