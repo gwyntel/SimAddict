@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SimAddict - AI Website Generator</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Marked.js for Markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+    <h1>SimAddict</h1>
+    <p>Generate websites dynamically using AI.</p>
+
+    <div id="api-config-section" class="section">
+        <div class="section-header">
+            <h2>API Configuration</h2>
+            <button id="toggle-api-config-btn" class="toggle-btn" title="Collapse/Expand API Configuration">
+                <span class="toggle-icon">▼</span>
+            </button>
+        </div>
+        <div id="api-config-content">
+            <div>
+                <label for="profile-name">Profile Name:</label>
+                <input type="text" id="profile-name" placeholder="e.g., My OpenAI Key">
+            </div>
+            <div class="oauth-section">
+                <button id="openrouter-oauth-btn" class="oauth-btn">Connect with OpenRouter</button>
+                <p class="oauth-info">One-click connection to OpenRouter's API</p>
+            </div>
+            
+            <div class="manual-config-section">
+                <p class="section-label">Or configure manually:</p>
+                <div>
+                    <label for="api-endpoint">API Endpoint URL:</label>
+                    <input type="url" id="api-endpoint" placeholder="https://api.example.com/v1/chat/completions">
+                </div>
+                <div>
+                    <label for="api-key">API Key:</label>
+                    <input type="password" id="api-key" placeholder="sk-...">
+                </div>
+                <div id="model-id-container">
+                    <label for="model-id">Model ID:</label>
+                    <input type="text" id="model-id" placeholder="openai/gpt-4o">
+                </div>
+                <div id="model-select-container" style="display: none;">
+                    <label for="model-id-select">Select Model:</label>
+                    <select id="model-id-select">
+                        <option value="">Loading models...</option>
+                    </select>
+                </div>
+                <button id="save-profile-btn">Save Profile</button>
+            </div>
+
+            <hr>
+
+            <div class="profile-controls">
+                <div>
+                    <label for="load-profile-select">Load Profile:</label>
+                    <select id="load-profile-select">
+                        <option value="">-- Select a Profile --</option>
+                        <!-- Saved profiles will be loaded here -->
+                    </select>
+                </div>
+                <button id="delete-profile-btn" disabled>Delete Profile</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="prompt-section" class="section">
+        <div class="section-header">
+            <h2>Website Prompt</h2>
+        </div>
+        <label for="user-prompt">Describe the website you want to generate:</label>
+        <textarea id="user-prompt" rows="5" placeholder="e.g., A simple portfolio page with a header, an about section, and a contact form."></textarea>
+        
+        <div class="attachment-section">
+            <label for="file-upload">Attach Reference Files (Images or PDFs):</label>
+            <input type="file" id="file-upload" accept=".jpg,.jpeg,.png,.gif,.pdf" multiple>
+            <div id="attachments-preview" class="attachments-container"></div>
+        </div>
+        
+        <div class="button-group">
+            <button id="generate-outline-btn">Generate Outline</button>
+        </div>
+    </div>
+
+    <div id="outline-section" class="section" style="display: none;"> <!-- Initially hidden -->
+        <div class="section-header">
+            <h2>Outline & Requirements</h2>
+        </div>
+        <div id="outline-display" class="output-display">
+            <!-- AI-generated outline will appear here -->
+            <p><i>Outline will be generated here...</i></p>
+        </div>
+        <textarea id="outline-edit" rows="10" style="display: none;"></textarea> <!-- Hidden until edit mode -->
+        <div class="button-group">
+            <button id="edit-outline-btn" disabled>Edit Outline</button>
+            <button id="approve-outline-btn" disabled>Approve & Generate Website</button>
+        </div>
+    </div>
+
+    <div id="website-display-section" class="section" style="display: none;"> <!-- Initially hidden -->
+        <div class="section-header">
+            <h2>Generated Website Preview</h2>
+        </div>
+        <iframe id="website-iframe" title="Generated Website Preview" sandbox="allow-scripts allow-same-origin"></iframe>
+        <div class="button-group">
+            <button id="back-to-outline-btn" class="nav-btn">Back to Outline</button>
+            <button id="view-fullscreen-btn" class="nav-btn">View Fullscreen</button>
+        </div>
+    </div>
+
+     <div id="action-section" class="section" style="display: none;"> <!-- Initially hidden -->
+        <div class="section-header">
+            <h2>Actions</h2>
+        </div>
+        <div class="button-group">
+            <button id="save-website-btn" disabled>Save Website Code (.html)</button>
+            <button id="start-over-btn" class="nav-btn">Start Over</button>
+        </div>
+    </div>
+    
+    <!-- Fullscreen preview overlay -->
+    <div id="fullscreen-preview" style="display: none;">
+        <div class="overlay-controls">
+            <button id="exit-fullscreen-btn">Back to Editor</button>
+            <button id="save-fullscreen-btn">Save Website</button>
+        </div>
+        <iframe id="fullscreen-iframe" sandbox="allow-scripts allow-same-origin"></iframe>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
