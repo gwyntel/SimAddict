@@ -1049,8 +1049,8 @@ IMPORTANT: Keep in mind that the generated website will need to be compatible wi
 
         IMPORTANT LIMITATIONS:
         1. The website will be opened locally as a single HTML file, so avoid features requiring server-side processing.
-        2. Do not use external libraries or CDNs - all code must be contained within the HTML file.
-        3. Avoid features that require internet connectivity, APIs, or database connections.
+        2. All code must be contained within the HTML file.
+        3. Avoid features that require database connections.
         4. Focus on client-side functionality that works in a local browser environment.
         5. Ensure the design is responsive and works well on both desktop and mobile devices.
 
