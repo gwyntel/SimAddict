@@ -783,17 +783,12 @@ document.addEventListener('DOMContentLoaded', () => {
         editOutlineBtn.disabled = true;
         approveOutlineBtn.disabled = true;
 
-        // Prepare the user prompt with attachments if any
-        let finalUserPrompt = userPrompt;
-        
+        // Prepare the user prompt text, listing attachments
+        let finalUserPromptText = userPrompt;
         if (attachments.length > 0) {
-            finalUserPrompt += "\n\nI've attached some reference files that should help with the design:";
-            attachments.forEach((attachment, index) => {
-                if (attachment.type === 'image') {
-                    finalUserPrompt += `\n- Reference image ${index + 1}: ${attachment.file.name}`;
-                } else if (attachment.type === 'pdf') {
-                    finalUserPrompt += `\n- Reference PDF ${index + 1}: ${attachment.file.name}`;
-                }
+            finalUserPromptText += "\n\nAttached files:";
+            attachments.forEach((attachment) => {
+                finalUserPromptText += `\n- ${attachment.file.name} (${attachment.type})`;
             });
         }
 
@@ -801,42 +796,54 @@ document.addEventListener('DOMContentLoaded', () => {
 
 IMPORTANT: Keep in mind that the generated website will need to be compatible with basic browser environments. Avoid suggesting features that require server-side processing, database connections, or external APIs that would not work in a simple HTML file opened locally. Focus on client-side functionality that works within the limitations of a single HTML file with embedded CSS and JavaScript.`;
         
-        // Prepare messages array with attachments if any
+        // Prepare messages array
         let messages = [
             { role: "system", content: systemPrompt }
         ];
-        
-        if (attachments.length > 0) {
-            // For models that support multimodal content
-            const userMessage = {
+
+        // Construct the user message content array
+        let userMessageContent = [];
+
+        // Add the main text prompt
+        userMessageContent.push({
+            type: "text",
+            text: finalUserPromptText // Use the updated text prompt
+        });
+
+        // Add attachments (images and PDFs) according to OpenRouter format
+        attachments.forEach(attachment => {
+            if (attachment.type === 'image') {
+                userMessageContent.push({
+                    type: "image_url",
+                    image_url: {
+                        url: attachment.dataUrl
+                    }
+                });
+            } else if (attachment.type === 'pdf') {
+                // Add PDF attachments using the 'file' type
+                userMessageContent.push({
+                    type: "file",
+                    file: {
+                        filename: attachment.file.name,
+                        file_data: attachment.dataUrl // Base64 data URL
+                    }
+                });
+            }
+        });
+
+        // Add the user message to the messages array
+        if (userMessageContent.length > 1) { // If there are attachments
+            messages.push({
                 role: "user",
-                content: []
-            };
-            
-            // Add text content
-            userMessage.content.push({
-                type: "text",
-                text: finalUserPrompt
+                content: userMessageContent
             });
-            
-            // Add image attachments
-            attachments.forEach(attachment => {
-                if (attachment.type === 'image') {
-                    userMessage.content.push({
-                        type: "image_url",
-                        image_url: {
-                            url: attachment.dataUrl
-                        }
-                    });
-                }
-                // Note: PDFs aren't directly supported in this format, but we mentioned them in the text
+        } else { // Just the text prompt
+            messages.push({
+                role: "user",
+                content: finalUserPromptText
             });
-            
-            messages.push(userMessage);
-        } else {
-            // Simple text-only message
-            messages.push({ role: "user", content: finalUserPrompt });
         }
+
 
         try {
             // For streaming, we'll use a different approach
