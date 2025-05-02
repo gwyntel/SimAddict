@@ -431,20 +431,35 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
+        console.log("Exchanging OAuth code via proxy...");
+        const targetUrl = OPENROUTER_API_URL + '/auth/keys'; // Target URL for the actual API
+
         try {
-            // Exchange the code for an API key
-            const response = await fetch('https://openrouter.ai/api/v1/auth/keys', {
+            // Prepare the payload for the original API call
+            const apiPayload = {
+                code: code,
+                code_verifier: codeVerifier,
+                code_challenge_method: 'S256'
+            };
+
+            // Exchange the code for an API key via the proxy
+            // Note: This specific endpoint doesn't require an API key for the request itself.
+            // The proxy needs to handle this case where `apiKey` might be null/undefined.
+            // We'll pass null for apiKey, and the proxy should ideally not add an Authorization header.
+            // Let's refine the proxy later if needed. For now, assume it handles null apiKey gracefully.
+            const response = await fetch('/api/proxy', { // Use the proxy endpoint
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    code: code,
-                    code_verifier: codeVerifier,
-                    code_challenge_method: 'S256'
+                    targetUrl: targetUrl, // Pass the original target URL
+                    apiKey: null,         // No API key needed for this specific call
+                    payload: apiPayload   // Pass the original payload
                 })
             });
-            
+
+
             if (!response.ok) {
                 throw new Error(`Failed to exchange code: ${response.status} ${response.statusText}`);
             }
@@ -583,21 +598,27 @@ document.addEventListener('DOMContentLoaded', () => {
             throw new Error("Messages array cannot be empty.");
         }
 
-        console.log("Calling API:", { endpoint, modelId, messages }); // Log for debugging (remove API key in production logs)
+        console.log("Calling API via proxy:", { targetUrl: endpoint, modelId, messages }); // Log for debugging
 
         try {
-            const response = await fetch(endpoint, {
+            // Prepare the payload for the original API call
+            const apiPayload = {
+                model: modelId,
+                messages: messages,
+                // Add other parameters like temperature, max_tokens if needed
+            };
+
+            // Call the proxy function
+            const response = await fetch('/api/proxy', { // Use the proxy endpoint
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`,
-                    'HTTP-Referer': APP_URL,
-                    'X-Title': APP_NAME
+                    // No Authorization header here; the proxy handles it
                 },
                 body: JSON.stringify({
-                    model: modelId,
-                    messages: messages,
-                    // Add other parameters like temperature, max_tokens if needed
+                    targetUrl: endpoint, // Pass the original target URL
+                    apiKey: apiKey,       // Pass the API key
+                    payload: apiPayload   // Pass the original payload
                 })
             });
 
@@ -912,19 +933,24 @@ Present your concepts as professional design documents with creative vision. Be 
 
 
         try {
-            // For streaming, we'll use a different approach
-            const response = await fetch(endpoint, {
+            // Prepare the payload for the original API call
+            const apiPayload = {
+                model: modelId,
+                messages: messages,
+                stream: true // Enable streaming
+            };
+
+            // Call the proxy function for streaming
+            const response = await fetch('/api/proxy', { // Use the proxy endpoint
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`,
-                    'HTTP-Referer': APP_URL,
-                    'X-Title': APP_NAME
+                    // No Authorization header here; the proxy handles it
                 },
                 body: JSON.stringify({
-                    model: modelId,
-                    messages: messages,
-                    stream: true // Enable streaming
+                    targetUrl: endpoint, // Pass the original target URL
+                    apiKey: apiKey,       // Pass the API key
+                    payload: apiPayload   // Pass the original payload (with stream: true)
                 })
             });
 
