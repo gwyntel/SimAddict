@@ -586,18 +586,23 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("Calling API:", { endpoint, modelId, messages }); // Log for debugging (remove API key in production logs)
 
         try {
-            const response = await fetch(endpoint, {
+            // Use the proxy endpoint
+            const response = await fetch('/api/proxy', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`,
-                    'HTTP-Referer': APP_URL,
-                    'X-Title': APP_NAME
+                    // No Authorization header needed for the proxy itself
                 },
                 body: JSON.stringify({
-                    model: modelId,
-                    messages: messages,
-                    // Add other parameters like temperature, max_tokens if needed
+                    endpoint: endpoint, // Pass the original endpoint to the proxy
+                    apiKey: apiKey,     // Pass the API key to the proxy
+                    modelId: modelId,   // Pass the model ID to the proxy
+                    messages: messages, // Pass the messages to the proxy
+                    // Pass through other potential parameters from the original request body
+                    // This requires careful handling to avoid forwarding unexpected fields
+                    // For simplicity, we'll only forward model and messages for now,
+                    // but this can be extended based on the needs of script.js
+                    // ... other parameters from original body if needed ...
                 })
             });
 
@@ -913,18 +918,21 @@ Present your concepts as professional design documents with creative vision. Be 
 
         try {
             // For streaming, we'll use a different approach
-            const response = await fetch(endpoint, {
+            // Use the proxy endpoint for streaming
+            const response = await fetch('/api/proxy', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`,
-                    'HTTP-Referer': APP_URL,
-                    'X-Title': APP_NAME
+                    // No Authorization header needed for the proxy itself
                 },
                 body: JSON.stringify({
-                    model: modelId,
-                    messages: messages,
-                    stream: true // Enable streaming
+                    endpoint: endpoint, // Pass the original endpoint to the proxy
+                    apiKey: apiKey,     // Pass the API key to the proxy
+                    modelId: modelId,   // Pass the model ID to the proxy
+                    messages: messages, // Pass the messages to the proxy
+                    stream: true // Enable streaming through the proxy
+                    // Pass through other potential parameters from the original request body
+                    // ... other parameters from original body if needed ...
                 })
             });
 
