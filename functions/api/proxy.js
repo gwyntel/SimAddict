@@ -20,11 +20,8 @@ export async function onRequestPost(context) {
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${apiKey}`,
-                // Include other headers from the original request if necessary,
-                // but be cautious about forwarding sensitive headers.
-                // For OpenRouter, HTTP-Referer and X-Title are recommended.
-                'HTTP-Referer': request.headers.get('HTTP-Referer') || 'https://simaddict.gwyn.tel', // Use a default if not provided
-                'X-Title': request.headers.get('X-Title') || 'SimAddict' // Use a default if not provided
+                // Do NOT forward HTTP-Referer or X-Title to the upstream LLM provider
+                // as they may cause CORS issues if not supported by the provider.
             },
             body: JSON.stringify({
                 model: modelId,
