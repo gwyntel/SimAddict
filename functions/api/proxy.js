@@ -34,19 +34,41 @@ export async function onRequestPost(context) {
             })
         });
 
-        // Return the response from the upstream API
-        const responseBody = await upstreamResponse.json();
+        // Check if the upstream response is a stream
+        const contentType = upstreamResponse.headers.get('Content-Type');
+        const isStreaming = contentType && contentType.includes('text/event-stream');
 
-        return new Response(JSON.stringify(responseBody), {
-            status: upstreamResponse.status,
-            headers: {
-                'Content-Type': 'application/json',
-                // Add CORS headers to allow access from your frontend origin
-                'Access-Control-Allow-Origin': '*', // Replace with your frontend origin in production
-                'Access-Control-Allow-Methods': 'POST, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type, Authorization, HTTP-Referer, X-Title',
-            }
-        });
+        if (isStreaming) {
+            // For streaming responses, pipe the stream directly to the client
+            return new Response(upstreamResponse.body, {
+                status: upstreamResponse.status,
+                statusText: upstreamResponse.statusText,
+                headers: {
+                    // Forward relevant headers from the upstream response
+                    'Content-Type': contentType,
+                    'Transfer-Encoding': upstreamResponse.headers.get('Transfer-Encoding'),
+                    'Connection': upstreamResponse.headers.get('Connection'),
+                    'Cache-Control': upstreamResponse.headers.get('Cache-Control'),
+                    // Add CORS headers for the frontend
+                    'Access-Control-Allow-Origin': '*', // Replace with your frontend origin in production
+                    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+                    'Access-Control-Allow-Headers': 'Content-Type, Authorization, HTTP-Referer, X-Title',
+                }
+            });
+        } else {
+            // For non-streaming responses, read the body and return as JSON
+            const responseBody = await upstreamResponse.json();
+            return new Response(JSON.stringify(responseBody), {
+                status: upstreamResponse.status,
+                headers: {
+                    'Content-Type': 'application/json',
+                    // Add CORS headers for the frontend
+                    'Access-Control-Allow-Origin': '*', // Replace with your frontend origin in production
+                    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+                    'Access-Control-Allow-Headers': 'Content-Type, Authorization, HTTP-Referer, X-Title',
+                }
+            });
+        }
 
     } catch (error) {
         console.error("Proxy error:", error);
