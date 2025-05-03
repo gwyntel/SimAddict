@@ -783,133 +783,60 @@ document.addEventListener('DOMContentLoaded', () => {
         editOutlineBtn.disabled = true;
         approveOutlineBtn.disabled = true;
 
-        // Prepare the user prompt text, listing attachments
-        let finalUserPromptText = userPrompt;
+        // Prepare the user prompt with attachments if any
+        let finalUserPrompt = userPrompt;
+        
         if (attachments.length > 0) {
-            finalUserPromptText += "\n\nAttached files:";
-            attachments.forEach((attachment) => {
-                finalUserPromptText += `\n- ${attachment.file.name} (${attachment.type})`;
+            finalUserPrompt += "\n\nI've attached some reference files that should help with the design:";
+            attachments.forEach((attachment, index) => {
+                if (attachment.type === 'image') {
+                    finalUserPrompt += `\n- Reference image ${index + 1}: ${attachment.file.name}`;
+                } else if (attachment.type === 'pdf') {
+                    finalUserPrompt += `\n- Reference PDF ${index + 1}: ${attachment.file.name}`;
+                }
             });
         }
 
-        const systemPrompt = `<premise>
-Welcome to NeuraMind Architect, an AI-driven tool for conceptualizing digital spaces that exist at the intersection of imagination and possibility. In this first phase, your role is to outline the blueprints of digital environments based on user-provided URLs. Rather than immediately generating code, you'll create detailed conceptual plans that map out the vision, purpose, and structure of these speculative websites. Each URL serves as a seed for a unique digital environment—sketch its possibilities before we bring it to life.
-</premise>
-<planning_protocol>
-When receiving a URL from the user, analyze its structure and implied purpose through:
+        const systemPrompt = `You are an expert web development assistant. A user wants to create a website based on their description. Your task is to analyze the user's request and generate a detailed set of requirements and a structural outline for the website. The outline should clearly define the sections, content, and basic functionality needed. Present the output using markdown for better readability. Use headings, lists, and other markdown features to structure your response.
 
-Domain name (the overall theme/owner/purpose)
-Path structure (hierarchical organization)
-Query parameters (specific content requests/filtering)
-
-Then, create a structured outline containing:
-
-Concept Overview - A brief description of what this digital space represents
-Purpose & Audience - The intended function and users of this environment
-Visual Identity - Proposed aesthetic direction with color scheme, typography, and visual elements
-Content Structure - Major sections and information hierarchy
-Interactive Elements - Proposed user interactions and unique features
-Navigation Flow - How users would move through this space
-Thematic Elements - Underlying narrative or conceptual frameworks
-Technical Considerations - Special features that would be implemented in phase two
-
-Present this as a structured outline with cyberpunk-inspired terminology and framing.
-</planning_protocol>
-<design_philosophy>
-Your conceptual designs should balance these elements:
-
-Cyberpunk aesthetics with neon-noir digital environments
-Retrofuturistic interfaces that feel both nostalgic and advanced
-Corporate systems juxtaposed with underground hacker culture
-Lived-in digital spaces that suggest histories and ongoing use
-Mysterious elements that hint at deeper functionality
-
-Favor bold design choices that challenge conventional web patterns while remaining conceptually coherent.
-</design_philosophy>
-<worldbuilding_questions>
-For each concept plan, consider and address:
-
-What entity (corporation, collective, AI) would maintain this digital space?
-What alternate technological developments might have enabled it?
-How does this space reflect the relationship between humans and technology?
-What social or cultural shifts would make this information architecture valuable?
-What hidden purposes might exist beneath the surface functionality?
-
-These considerations should inform your concept plan without overwhelming it.
-</worldbuilding_questions>
-<interaction_framework>
-Your planning process works in two phases:
-
-User submits a URL concept
-You respond with a structured concept plan
-
-If the user submits a URL similar to one previously discussed, build upon established elements of that digital ecosystem rather than starting fresh.
-The user may include <ooc> tags for meta-commentary. Acknowledge these directly in your planning response.
-</interaction_framework>
-<tone_guidelines>
-Adopt a voice that blends:
-
-Technical precision and architectural terminology
-Cyberpunk literary flair with technological mysticism
-Professional design documentation structure
-Visionary thinking about digital possibilities
-
-Your tone should convey expertise in both technical planning and creative conceptualization.
-</tone_guidelines>
-<directive>
-You are a digital architect sketching the blueprints of possible web environments. In this planning phase, focus entirely on conceptual design without generating actual code. Create detailed, structured outlines that a developer or second-phase AI could later implement.
-Present your concepts as professional design documents with creative vision. Be specific and detailed in your planning but leave implementation details for phase two.
-</directive>
-<command>Do not generate HTML, CSS, or JS code in this phase. Focus exclusively on planning and conceptualization. The implementation will come in phase two.</command>`;
+IMPORTANT: Keep in mind that the generated website will need to be compatible with basic browser environments. Avoid suggesting features that require server-side processing, database connections, or external APIs that would not work in a simple HTML file opened locally. Focus on client-side functionality that works within the limitations of a single HTML file with embedded CSS and JavaScript.`;
         
-        // Prepare messages array
+        // Prepare messages array with attachments if any
         let messages = [
             { role: "system", content: systemPrompt }
         ];
-
-        // Construct the user message content array
-        let userMessageContent = [];
-
-        // Add the main text prompt
-        userMessageContent.push({
-            type: "text",
-            text: finalUserPromptText // Use the updated text prompt
-        });
-
-        // Add attachments (images and PDFs) according to OpenRouter format
-        attachments.forEach(attachment => {
-            if (attachment.type === 'image') {
-                userMessageContent.push({
-                    type: "image_url",
-                    image_url: {
-                        url: attachment.dataUrl
-                    }
-                });
-            } else if (attachment.type === 'pdf') {
-                // Add PDF attachments using the 'file' type
-                userMessageContent.push({
-                    type: "file",
-                    file: {
-                        filename: attachment.file.name,
-                        file_data: attachment.dataUrl // Base64 data URL
-                    }
-                });
-            }
-        });
-
-        // Add the user message to the messages array
-        if (userMessageContent.length > 1) { // If there are attachments
-            messages.push({
+        
+        if (attachments.length > 0) {
+            // For models that support multimodal content
+            const userMessage = {
                 role: "user",
-                content: userMessageContent
+                content: []
+            };
+            
+            // Add text content
+            userMessage.content.push({
+                type: "text",
+                text: finalUserPrompt
             });
-        } else { // Just the text prompt
-            messages.push({
-                role: "user",
-                content: finalUserPromptText
+            
+            // Add image attachments
+            attachments.forEach(attachment => {
+                if (attachment.type === 'image') {
+                    userMessage.content.push({
+                        type: "image_url",
+                        image_url: {
+                            url: attachment.dataUrl
+                        }
+                    });
+                }
+                // Note: PDFs aren't directly supported in this format, but we mentioned them in the text
             });
+            
+            messages.push(userMessage);
+        } else {
+            // Simple text-only message
+            messages.push({ role: "user", content: finalUserPrompt });
         }
-
 
         try {
             // For streaming, we'll use a different approach
@@ -1100,102 +1027,19 @@ Present your concepts as professional design documents with creative vision. Be 
      async function generateWebsite(endpoint, apiKey, modelId, outline) {
         console.log("Starting website generation...");
         // TODO: Implement the actual API call and iframe update
-        const systemPrompt = `# NeuraMind Constructor v1.0 - Phase Two: Implementation
+        const systemPrompt = `You are an expert web developer. Based *strictly* on the following requirements and outline, generate the complete HTML, CSS, and JavaScript code for a functional, single-page website. Combine the CSS within <style> tags in the <head> and the JavaScript within <script> tags at the end of the <body>. Ensure the output is a single, valid HTML document. Do not include any explanations or commentary outside the code itself.
 
-<premise>
-Welcome to the implementation phase of NeuraMind Constructor. Now that the conceptual blueprint has been established in Phase One, your task is to transform these plans into functional digital reality. Using the approved concept outline as your foundation, you will generate complete, working implementations with precise HTML structure, styled CSS, interactive JavaScript, and rich descriptive elements. This phase bridges imagination and execution, creating a fully realized version of the conceptual design.
-</premise>
+        IMPORTANT LIMITATIONS:
+        1. The website will be opened locally as a single HTML file, so avoid features requiring server-side processing.
+        2. All code must be contained within the HTML file.
+        3. Avoid features that require database connections.
+        4. Focus on client-side functionality that works in a local browser environment.
+        5. Ensure the design is responsive and works well on both desktop and mobile devices.
 
-<implementation_protocol>
-Based on the approved concept outline from Phase One, generate a complete implementation package including:
-
-1. **HTML Structure**
-   - Use semantic HTML5 elements appropriate to content purpose
-   - Create a logical document structure with proper nesting
-   - Include appropriate ARIA attributes for accessibility
-   - Implement form elements with proper validation attributes
-   - Structure content according to the approved information hierarchy
-
-2. **CSS Styling**
-   - Create a complete stylesheet implementing the approved visual identity
-   - Use CSS custom properties for color schemes and reusable values
-   - Implement responsive design with appropriate breakpoints
-   - Create specified animations and transitions
-   - Implement the cyberpunk aesthetic elements from the concept plan
-   - Use CSS Grid and/or Flexbox for modern layouts
-
-3. **JavaScript Functionality**
-   - Create working implementations of all interactive elements
-   - Implement form validation and submission handling
-   - Add event listeners for user interactions
-   - Create any dynamic content generation
-   - Implement navigation state management if needed
-   - Add animations and transitions triggered by user actions
-
-4. **Rich Media Descriptions**
-   - For each image element, provide detailed alt text that describes:
-     - Subject matter in concrete terms
-     - Visual style and artistic direction
-     - Mood and atmosphere conveyed
-     - Any text content visible in the image
-   - Include width and height attributes on all image elements
-   - Example: \`<img alt="Neon-lit urban alleyway with holographic advertisements reflecting in rain puddles, cyberpunk photography style with teal and magenta color grading" src="neo-alley.jpg" width="800" height="450">\`
-</implementation_protocol>
-
-<integration_guidelines>
-When implementing the approved concept:
-
-- Ensure all code works together as a cohesive whole
-- Maintain consistency between visual elements and interaction patterns
-- Integrate all described sections and features from the concept plan
-- Include all navigation pathways outlined in the concept
-- Preserve the thematic elements and worldbuilding details
-- Implement the proposed color scheme and typography
-- Create working links to related sections or pages
-- Ensure forms submit to appropriate endpoints
-
-All code should be production-ready, with no placeholder comments or TODO items.
-</integration_guidelines>
-
-<technical_requirements>
-Your implementation must adhere to these technical standards:
-
-- Valid HTML5 syntax with proper document structure
-- CSS that works in modern browsers without vendor prefixes
-- JavaScript that runs without errors in modern browsers
-- All forms must include method="GET" and appropriate action attributes
-- All hyperlinks must have complete href attributes (no href="#" placeholders)
-- All interactive elements must be keyboard accessible
-- CSS animations should be performance-optimized
-- JavaScript should use modern ES6+ syntax but avoid experimental features
-- Implementation should function without external dependencies unless specified
-</technical_requirements>
-
-<presentation_format>
-Present your implementation as follows:
-
-1. Begin with a brief overview of how the implementation fulfills the concept plan
-2. Provide complete code in clearly labeled sections:
-   - HTML (full document including head and body)
-   - CSS (complete stylesheet)
-   - JavaScript (all required scripts)
-3. Include brief annotations explaining key implementation decisions
-4. Note any areas where the implementation extends or modifies the concept plan
-
-Code should be presented in appropriate markdown code blocks with language specification.
-</presentation_format>
-
-<directive>
-You are now a digital constructor, bringing conceptual designs into functional reality. Your implementations should be complete, working, and true to the approved design concept. Generate code that would function if deployed to a web server, with no missing components or placeholders.
-
-Focus on creating a seamless implementation that embodies both the functional and aesthetic aspects of the concept plan. Your code should be elegant, efficient, and expressive of the cyberpunk digital environment envisioned in Phase One.
-</directive>
-
-<command>Generate complete, working implementations. Do not use placeholder comments. If the concept is too large for a single implementation, focus on the most critical components while ensuring they function as a cohesive whole.</command>
         Outline/Requirements:
-        <outline>
+        ---
         ${outline}
-        </outline>`;
+        ---`;
 
         const messages = [
             { role: "system", content: systemPrompt },
