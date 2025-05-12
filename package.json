@@ -1,0 +1,12 @@
+{
+  "name": "simaddict-desktop",
+  "version": "1.0.0",
+  "description": "SimAddict - AI Website Generator Desktop App",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^36.1.0"
+  }
+}
